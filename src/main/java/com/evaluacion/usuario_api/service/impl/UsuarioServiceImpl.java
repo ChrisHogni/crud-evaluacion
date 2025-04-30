@@ -2,7 +2,6 @@ package com.evaluacion.usuario_api.service.impl;
 
 
 import com.evaluacion.usuario_api.config.PasswordEncoder;
-import com.evaluacion.usuario_api.dto.TelefonoDTO;
 import com.evaluacion.usuario_api.dto.UserRequestDTO;
 import com.evaluacion.usuario_api.dto.UserResponseDTO;
 import com.evaluacion.usuario_api.exception.CustomException;
@@ -11,6 +10,8 @@ import com.evaluacion.usuario_api.model.Usuario;
 import com.evaluacion.usuario_api.repository.UsuarioRepository;
 import com.evaluacion.usuario_api.security.JwtUtil;
 import com.evaluacion.usuario_api.service.UsuarioService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -25,21 +26,22 @@ import java.util.stream.Collectors;
 @Transactional
 public class UsuarioServiceImpl implements UsuarioService {
 
+
+    private static final Logger log = LoggerFactory.getLogger(UsuarioServiceImpl.class);
     private final UsuarioRepository repo;
     private final JwtUtil jwtUtil;
 
     @Value("${regex.password}")
     private String passwordRegex;
 
-    @Value("${regex.email}")
-    private String correo;
-
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public UsuarioServiceImpl(UsuarioRepository repo, JwtUtil jwtUtil) {
-        this.repo = repo;
+    public UsuarioServiceImpl(UsuarioRepository usuarioRepository, JwtUtil jwtUtil, @Value("${regex.password}") String passwordRegex, PasswordEncoder passwordEncoder) {
+        this.repo = usuarioRepository;
         this.jwtUtil = jwtUtil;
+        this.passwordRegex = passwordRegex;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -48,10 +50,8 @@ public class UsuarioServiceImpl implements UsuarioService {
             throw new CustomException("El correo ya está registrado");
         }
         if (!dto.getContrasena().matches(passwordRegex)) {
+            log.info("contraseña: {}", dto.getContrasena());
             throw new CustomException("La contraseña no cumple el formato");
-        }
-        if (!dto.getCorreo().matches(correo)) {
-            throw new CustomException("El correo no cumple el formato");
         }
         Usuario u = new Usuario();
         u.setNombre(dto.getNombre());
@@ -92,16 +92,81 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
+    public Usuario obtenerUsuarioData(UUID id) {
+        return repo.findById(id)
+                .orElseThrow(() -> new CustomException("Usuario no encontrado"));
+    }
+
+    @Override
     public UserResponseDTO actualizarUsuario(UUID id, UserRequestDTO dto) {
-        // implementación similar a crear, asignando todos los campos
-        return obtenerUsuario(id);
+        Usuario existente = repo.findById(id)
+                .orElseThrow(() -> new CustomException("Usuario no encontrado"));
+
+        // Validar nuevo correo si cambió
+        if (!existente.getCorreo().equals(dto.getCorreo())) {
+            repo.findByCorreo(dto.getCorreo()).ifPresent(u -> {
+                throw new CustomException("El correo ya está registrado");
+            });
+        }
+
+        if (!dto.getContrasena().matches(passwordRegex)) {
+            throw new CustomException("La contraseña no cumple el formato");
+        }
+
+        existente.setNombre(dto.getNombre());
+        existente.setCorreo(dto.getCorreo());
+        existente.setContrasena(passwordEncoder.encode(dto.getContrasena()));
+        existente.setModificado(LocalDateTime.now());
+
+        if (dto.getTelefonos() != null) {
+            List<Telefono> telefonos = dto.getTelefonos().stream()
+                    .map(t -> new Telefono(null, t.getNumero(), t.getCodigoCiudad(), t.getCodigoPais()))
+                    .collect(Collectors.toList());
+            existente.setTelefonos(telefonos);
+        }
+
+        Usuario actualizado = repo.save(existente);
+        return new UserResponseDTO(actualizado.getId(), actualizado.getCreado(), actualizado.getModificado(),
+                actualizado.getUltimoLogin(), actualizado.getToken(), actualizado.isActivo());
     }
 
     @Override
     public UserResponseDTO actualizarParcial(UUID id, UserRequestDTO dto) {
-        // implementar actualizaciones parciales
-        return obtenerUsuario(id);
+        Usuario existente = repo.findById(id)
+                .orElseThrow(() -> new CustomException("Usuario no encontrado"));
+
+        if (dto.getNombre() != null) {
+            existente.setNombre(dto.getNombre());
+        }
+
+        if (dto.getCorreo() != null && !dto.getCorreo().equals(existente.getCorreo())) {
+            repo.findByCorreo(dto.getCorreo()).ifPresent(u -> {
+                throw new CustomException("El correo ya está registrado");
+            });
+            existente.setCorreo(dto.getCorreo());
+        }
+
+        if (dto.getContrasena() != null) {
+            if (!dto.getContrasena().matches(passwordRegex)) {
+                throw new CustomException("La contraseña no cumple el formato");
+            }
+            existente.setContrasena(passwordEncoder.encode(dto.getContrasena()));
+        }
+
+        if (dto.getTelefonos() != null) {
+            List<Telefono> telefonos = dto.getTelefonos().stream()
+                    .map(t -> new Telefono(null, t.getNumero(), t.getCodigoCiudad(), t.getCodigoPais()))
+                    .collect(Collectors.toList());
+            existente.setTelefonos(telefonos);
+        }
+
+        existente.setModificado(LocalDateTime.now());
+
+        Usuario actualizado = repo.save(existente);
+        return new UserResponseDTO(actualizado.getId(), actualizado.getCreado(), actualizado.getModificado(),
+                actualizado.getUltimoLogin(), actualizado.getToken(), actualizado.isActivo());
     }
+
 
     @Override
     public void eliminarUsuario(UUID id) {

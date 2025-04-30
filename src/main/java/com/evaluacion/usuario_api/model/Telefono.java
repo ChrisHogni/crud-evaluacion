@@ -16,8 +16,15 @@ public class Telefono {
     private String codigoCiudad;
     private String codigoPais;
 
-    // Getters y Setters
-
+    public Telefono(UUID id, String numero, String codigoCiudad, String codigoPais) {
+        this.id = id;
+        this.numero = numero;
+        this.codigoCiudad = codigoCiudad;
+        this.codigoPais = codigoPais;
+    }
+// Getters y Setters
+public Telefono(){
+}
     public UUID getId() {
         return id;
     }

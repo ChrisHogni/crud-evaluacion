@@ -18,7 +18,7 @@ Este proyecto es una API RESTful desarrollada en **Spring Boot 3.4.5**, que perm
 
 1. Clona el repositorio:
 - git clone https://github.com/ChrisHogni/crud-evaluacion.git
-- cd usuario-api
+- cd crud-evaluacion
 
 2. Compila y ejecuta
 - mvn clean install
@@ -30,3 +30,4 @@ Recurso	URL
 - Swagger UI	http://localhost:8080/crud-evaluacion/swagger-ui/index.html
 - H2 Console	http://localhost:8080/crud-evaluacion/h2-console (JDBC Url: jdbc:h2:mem:usuariosdb | User: sa | Password: (vacío))
 - API Base URL	http://localhost:8080/crud-evaluacion/usuarios
+

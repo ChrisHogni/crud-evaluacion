@@ -2,6 +2,7 @@ package com.evaluacion.usuario_api.controller;
 
 import com.evaluacion.usuario_api.dto.UserRequestDTO;
 import com.evaluacion.usuario_api.dto.UserResponseDTO;
+import com.evaluacion.usuario_api.model.Usuario;
 import com.evaluacion.usuario_api.repository.UsuarioRepository;
 import com.evaluacion.usuario_api.service.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,6 +41,13 @@ public class UsuarioController {
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDTO> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(service.obtenerUsuario(id));
+    }
+
+    @Operation(summary = "Obtener información de un usuario", description = "Busca información de un usuario en el sistema")
+    @ApiResponse(responseCode = "201", description = "Usuario encontrado exitosamente")
+    @GetMapping("data/{id}")
+    public ResponseEntity<Usuario> getUsuarioDataById(@PathVariable UUID id) {
+        return ResponseEntity.ok(service.obtenerUsuarioData(id));
     }
 
     @Operation(summary = "Modificación un usuario", description = "Modifica un usuario en el sistema")
