@@ -16,9 +16,9 @@ Este proyecto es una API RESTful desarrollada en **Spring Boot 3.4.5**, que perm
 
 ## Esquema
 
-![Diagrama de Solución](src/main/resources/img/Diagrama de Solucion.png)
+![Diagrama de Solución](img/Diagrama de Solucion.png)
 
-![Diagrama de Clases](src/main/resources/img/Diagrama de Clases.png)
+![Diagrama de Clases](img/Diagrama de Clases.png)
 
 
 ## ⚙️ Instalación y ejecución
