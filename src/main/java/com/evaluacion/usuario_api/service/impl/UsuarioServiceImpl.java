@@ -102,7 +102,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario existente = repo.findById(id)
                 .orElseThrow(() -> new CustomException("Usuario no encontrado"));
 
-        // Validar nuevo correo si cambió
         if (!existente.getCorreo().equals(dto.getCorreo())) {
             repo.findByCorreo(dto.getCorreo()).ifPresent(u -> {
                 throw new CustomException("El correo ya está registrado");

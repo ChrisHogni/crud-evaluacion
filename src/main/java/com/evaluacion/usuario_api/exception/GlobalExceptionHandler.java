@@ -19,7 +19,7 @@ public class GlobalExceptionHandler {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach(error -> {
             String errorMessage = error.getDefaultMessage();
-            errors.put("mensaje", errorMessage); // Formato: {"mensaje": "Texto del error"}
+            errors.put("mensaje", errorMessage);
         });
         return ResponseEntity.badRequest().body(errors);
     }
